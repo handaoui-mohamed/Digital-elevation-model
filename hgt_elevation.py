@@ -1,7 +1,7 @@
 import numpy as np
 
 SAMPLES = 1201
-FILES = ['coordinates/N35W002.xyz', 'coordinates/N35W001.xyz']
+FILES = ['patches/N35W002.hgt', 'patches/N35W001.hgt']
 
 
 def read_elevation_from_file(hgt_file, lon, lat):
@@ -20,4 +20,4 @@ def read_elevation_from_file(hgt_file, lon, lat):
 
 
 # example
-print(read_elevation_from_file(FILES[0], -1.58, 35.64))
+print(read_elevation_from_file('patches/N35W002.hgt', -1.082632, 35.365160))
