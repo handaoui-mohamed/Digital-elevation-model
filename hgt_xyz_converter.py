@@ -1,31 +1,52 @@
 """Convert HGT data to XYZ points."""
+import re
+import numpy as np
+from os.path import basename
+from time import time
+from progress import printDate, printProgressBar, printTiming
 
-import sys
-from functools import partial
+SAMPLES = 1201
+FILES = ['patches/N35W002.hgt', 'patches/N35W001.hgt']
+
+TOTAL_LINES = (SAMPLES * SAMPLES) * len(FILES)
 
 
-INPUT_FILE = 'N35W002.hgt'
-OUTPUT_FILE = 'N35W002_.xyz'
+def hgtToXyz(hgt_file):
+    """
+    this is not a generique function, it only woks with NxxWxxx.hgt files
+    """
+    TOTAL_LINES = SAMPLES * SAMPLES
+    base = re.findall('\d+', basename(hgt_file))
+    baseLat = int(base[0])
+    baseLon = int(base[1])
+    hgt_data = open(hgt_file, 'rb')
+    xyz_file = open(hgt_file + '.xyz', 'w')
+    # Each data is 16bit signed integer(i2) - big endian(>)
+    elevations = np.fromfile(
+        hgt_data,  # binary data
+        np.dtype('>i2'),  # data type
+        TOTAL_LINES  # length
+    ).reshape((SAMPLES, SAMPLES))
 
+    sample = SAMPLES - 1
+    currentIndex = 0
+    for row_index, row in enumerate(elevations):
+        lat = str(baseLat + (sample - row_index) / sample)
+        for index, elevation in enumerate(row):
+            currentIndex += 1
+            printProgressBar(currentIndex, TOTAL_LINES)
+            lon = str(-baseLon + ((index + sample) - sample) / sample)
+            print(lon+' '+lat+' ' + str(elevation), file=xyz_file, end='\n')
 
-def main(inputname, outputname):
-    """Entry point of the program."""
-    alts = []
-    with open(inputname, 'rb') as f:
-        for p, chunk in enumerate(iter(partial(f.read, 2), '')):
-            if len(chunk) == 0:
-                break
-            alt = chunk[0]
-            alt <<= 8
-            alt |= chunk[1]
-            x, y = divmod(p, 3601)
-            x *= 30
-            y *= 30
-            alts.append((x, y, alt))
-    with open(outputname, 'w') as f:
-        for entry in alts:
-            print("{} {} {}".format(*entry), file=f)
+    hgt_data.close()
+    xyz_file.close()
 
 
 if __name__ == '__main__':
-    main(INPUT_FILE, OUTPUT_FILE)
+    start = time()
+    printDate('Extraction START TIME: ')
+    for patch in FILES:
+        print('\nExtraction of file = '+basename(patch), end='\n')
+        hgtToXyz(patch)
+    printDate('\nExtraction END TIME: ')
+    printTiming(start)
