@@ -16,9 +16,7 @@ def hgtToXyz(hgt_file):
     this is not a generique function, it only woks with NxxWxxx.hgt files
     """
     TOTAL_LINES = SAMPLES * SAMPLES
-    base = re.findall('\d+', basename(hgt_file))
-    baseLat = int(base[0])
-    baseLon = int(base[1])
+    baseLat, baseLon = map(int, re.findall('\d+', basename(hgt_file)))
     hgt_data = open(hgt_file, 'rb')
     xyz_file = open(hgt_file + '.xyz', 'w')
     # Each data is 16bit signed integer(i2) - big endian(>)
